@@ -11,8 +11,8 @@ var HighFive = {};
             this.gameInProgress = false;
             this.gameScore = 0;
             this.recordScore = 0;
-			this.alpha = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "R", "S", "T", "U", "W", "X", "Y", "Z" ]
-			this.benahcmark = false;
+            this.alpha = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "R", "S", "T", "U", "W", "X", "Y", "Z" ]
+            this.benahcmark = false;
         }
 
         function FastPlayer(n, e, s, w) {
@@ -53,6 +53,9 @@ var HighFive = {};
             var wVal = w;
         }
 
+        /**
+            Modificar Player por FastPlayer
+        */
         function Jodi(n, e, s, w) {
             FastPlayer.apply(this, arguments);
             this.name = "Jodi";
@@ -67,14 +70,20 @@ var HighFive = {};
 
         Game.prototype.initialize = function () {
             // Allocate the game board array
+            this.stats = new Stats();
+            this.stats.setMode(2);
+            this.stats.domElement.style.position = 'absolute';
+            this.stats.domElement.style.left = '450px';
+            this.stats.domElement.style.top = '0px';
+            document.body.appendChild( this.stats.domElement ); 
+
             this.grid = document.getElementById('grid');
             this.grid.style.width = 16 * this.boardSize + 'px';
-            //this.grid.style.height = 16 * this.boardSize;
 
             for (var i = 0; i < this.boardSize; i++) {
                 this.matrix[i] = new Array(this.boardSize);
             }
-			
+            
         }
 
         Game.prototype.copyBenchMatrix = function () {
@@ -160,23 +169,23 @@ var HighFive = {};
             var tmp;
             for (var i = 0; i < this.boardSize; i++) {
                 for (var j = 0; j < this.boardSize; j++) {
-					this.el = document.createElement('img');
+                    this.el = document.createElement('img');
                     tmp = Math.floor(Math.random() * 4);
-					if((tmp === 1) || (tmp === 2))
-						this.el.setAttribute('src','images/0001_Jodi-NE.png');
-					else
-						this.el.setAttribute('src','images/Mia_NE.png');
-					
-					this.el.style.msGridRow = i + 1
-					this.el.style.msGridColumn = j + 1;
-					this.el.id = this.alpha[i] + j;
-					classTmp = tmp + 1;
-					var classVal = 'imageClass' + classTmp;
-					var idSearch = '#' + this.alpha[i] + j
-					this.grid.appendChild(this.el);
-					$(idSearch).addClass(classVal);
-					this.el.addEventListener('click', root.game.onTouch);
-					
+                    if((tmp === 1) || (tmp === 2))
+                        this.el.setAttribute('src','images/0001_Jodi-NE.png');
+                    else
+                        this.el.setAttribute('src','images/Mia_NE.png');
+                    
+                    this.el.style.msGridRow = i + 1
+                    this.el.style.msGridColumn = j + 1;
+                    this.el.id = this.alpha[i] + j;
+                    classTmp = tmp + 1;
+                    var classVal = 'imageClass' + classTmp;
+                    var idSearch = '#' + this.alpha[i] + j
+                    this.grid.appendChild(this.el);
+                    $(idSearch).addClass(classVal);
+                    this.el.addEventListener('click', root.game.onTouch);
+                    
                     if (tmp == 0) {
                         this.matrix[j][i] = new Jodi(1, 1, 0, 0);
                     }
@@ -197,9 +206,13 @@ var HighFive = {};
         Game.prototype.onTouch = function () {
             // Add the x, y co-ordinates of the nodes touched to nextNodesStack
             // Hard coded below for stress perf measurement
-
             if(root.game.benchmarkMode == true){
-//                root.game.copyBenchMatrix();
+                /**
+                    Comentar copyBenchMatrix y push 8,8
+                    Descomentar el mathrandom
+                */
+                //root.game.copyBenchMatrix();
+                //root.game.nextNodesStack.push([8, 8]);
                 root.game.nextNodesStack.push([Math.floor(Math.random() * root.game.boardSize), Math.floor(Math.random() * root.game.boardSize)]);
 
                 root.game.gameInProgress = true;
@@ -214,41 +227,48 @@ var HighFive = {};
 
         Game.prototype.runGame = function () {
             // Transfer objects to be moved to currentNodesList to rotate chains of neighbors together
-            while (root.game.nextNodesStack[0]) {
-                root.game.currentNodesList.push(root.game.nextNodesStack.pop());
-            }
-            //Check neighbors to be rotated 
-            root.game.currentNodesList.forEach(root.game.checkNeighbors);
+                root.game.stats.begin();
+               
+                while (root.game.nextNodesStack[0]) {
+                    root.game.currentNodesList.push(root.game.nextNodesStack.pop());
+                }
+                //Check neighbors to be rotated 
+                root.game.currentNodesList.forEach(root.game.checkNeighbors);
 
-            // Rotate and animate
-            root.game.currentNodesList.forEach(root.game.rotateFast);
-            root.game.commitRotationFast();
-            root.game.fireAnimation(root.game.currentNodesList);
+                // Rotate and animate
+                root.game.currentNodesList.forEach(root.game.rotateFast);
+                root.game.commitRotationFast();
+                root.game.fireAnimation(root.game.currentNodesList);
 
-            // Logic for continuing or finishing the game
-			if(root.game.benchmarkMode == false){
-				if (root.game.nextNodesStack[0]) {
-					timeout(root.game.runGame);
-				} else {
-					root.game.gameInProgress = true;
-				}
-			} else {
-				if(root.game.nextNodesStack[0])
-					timeout(root.game.runGame);
-				else {
-					root.game.gameScore = 0;
-					root.game.nextNodesStack.push([Math.floor(Math.random() * root.game.boardSize), Math.floor(Math.random() * root.game.boardSize)]);
-					timeout(root.game.runGame);
-				}
-			}
+                // Logic for continuing or finishing the game
+                if(root.game.benchmarkMode == false){
+                    if (root.game.nextNodesStack[0]) {
+                        timeout(root.game.runGame);
+                    } else {
+                        root.game.gameInProgress = true;
+                    }
+                } else {
+                    if(root.game.nextNodesStack[0])
+                        timeout(root.game.runGame);
+                    else {
+                        root.game.gameScore = 0;
+                        root.game.nextNodesStack.push([Math.floor(Math.random() * root.game.boardSize), Math.floor(Math.random() * root.game.boardSize)]);
+                        timeout(root.game.runGame);
+                    }
+                }
 
-            $("#gameScore").text(root.game.gameScore);
+                $("#gameScore").text(root.game.gameScore);
+                root.game.stats.end();
         }
 
         function timeout(animate) {
+            /**
+                Descomentar el animationFrame
+            */
             requestAnimationFrame(animate);
-            //animate();
-        }	
+
+            //setTimeout(animate, 0);
+        }   
 
         Game.prototype.checkNeighbors = function (node) {
             var x = node[0]; //represents the x co-ordinate of the player
