@@ -12,6 +12,8 @@
         		HighFive.game.fillDefaultBoard();
                 $("#benchmark").change(function(){
                     HighFive.game.benchmarkMode = $("#benchmark").is(':checked');
+                    HighFive.game.lastLoop = new Date;
+                    HighFive.game.numLoop = 0;
                 });
 
                 HighFive.game.benchmarkMode = $("#benchmark").is(':checked');

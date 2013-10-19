@@ -13,6 +13,8 @@ var HighFive = {};
             this.recordScore = 0;
             this.alpha = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "R", "S", "T", "U", "W", "X", "Y", "Z" ]
             this.benahcmark = false;
+            this.numLoop = 0;
+            this.lastLoop = new Date;
         }
 
         function FastPlayer(n, e, s, w) {
@@ -214,6 +216,7 @@ var HighFive = {};
                 //root.game.copyBenchMatrix();
                 //root.game.nextNodesStack.push([8, 8]);
                 root.game.nextNodesStack.push([Math.floor(Math.random() * root.game.boardSize), Math.floor(Math.random() * root.game.boardSize)]);
+                root.game.numLoop++;
 
                 root.game.gameInProgress = true;
                 root.game.gameScore = 1;
@@ -253,6 +256,19 @@ var HighFive = {};
                     else {
                         root.game.gameScore = 0;
                         root.game.nextNodesStack.push([Math.floor(Math.random() * root.game.boardSize), Math.floor(Math.random() * root.game.boardSize)]);
+                        root.game.numLoop++;
+
+                        if(root.game.numLoop == 100){
+                            var thisLoop = new Date;
+                            $("#numLoop").remove();
+                            var loop = document.createElement('div');
+                            loop.id = 'numLoop';
+                            $(loop).text('He tardado ' + ((thisLoop - root.game.lastLoop) / 1000) + 'segundos en realizar 100 iteraciones');
+                            document.body.appendChild(loop);
+                            root.game.numLoop = 0;
+                            root.game.lastLoop = new Date;
+                        }
+
                         timeout(root.game.runGame);
                     }
                 }
